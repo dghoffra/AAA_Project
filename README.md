@@ -1,6 +1,6 @@
 ## Data Loading
 
-1. Taxidaten downloaden 
+1. Taxidaten downloaden und in trips.csv umbenennen
 2. Git Bash downloaden und installieren (Linux Shell)
 3. Einen Ordner erstellen, wo ihr das Repo auschecken wollt. 
 4. Auf gleicher Höhe wie das Notebook einen Ordner namens "data" erstellen 
