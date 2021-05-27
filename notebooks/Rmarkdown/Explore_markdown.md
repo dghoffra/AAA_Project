@@ -14,22 +14,42 @@ includes both content as well as the output of any embedded R code
 chunks within the document. You can embed an R code chunk like this:
 
 ``` r
-summary(cars)
+# create 
+
+df <- df %>% mutate(Tripmonth = as.factor(month((parse_date_time(df$`Trip Start Timestamp`, "mdYHMS%p")))),
+                    Triphour = hour(parse_date_time(df$`Trip Start Timestamp`, "mdYHMS%p"))
+    
+)
+
+# Trips per dayhour for each month
+ggplot(df,aes(Triphour, fill = Tripmonth))+
+  geom_bar()+
+  facet_wrap( ~ Tripmonth)
 ```
 
-    ##      speed           dist       
-    ##  Min.   : 4.0   Min.   :  2.00  
-    ##  1st Qu.:12.0   1st Qu.: 26.00  
-    ##  Median :15.0   Median : 36.00  
-    ##  Mean   :15.4   Mean   : 42.98  
-    ##  3rd Qu.:19.0   3rd Qu.: 56.00  
-    ##  Max.   :25.0   Max.   :120.00
+![](RMarkdown_figs/markdown-taxi_trip%202-1.png)<!-- -->
 
-## Including Plots
+``` r
+# mean trip length per dayhour
+df %>% group_by(Triphour) %>% summarize(mean_trip_length_in_seconds = mean(`Trip Seconds`, na.rm = TRUE)) %>%
+  ungroup() %>% 
+  ggplot(data = ., aes(y= mean_trip_length_in_seconds, x = Triphour))+
+  geom_col()
+```
 
-You can also embed plots, for example:
+![](RMarkdown_figs/markdown-taxi_trip%203-1.png)<!-- -->
 
-![](RMarkdown_figs/markdown-pressure-1.png)<!-- -->
+longer trips during commuting time. longer trips or more
+traffic?
 
-Note that the `echo = FALSE` parameter was added to the code chunk to
-prevent printing of the R code that generated the plot.
+``` r
+df %>% group_by(Triphour) %>% summarize(mean_trip_length_in_miles = mean(`Trip Miles`, na.rm = TRUE)) %>%
+  ungroup() %>% 
+  ggplot(data = ., aes(y= mean_trip_length_in_miles, x = Triphour))+
+  geom_col() 
+```
+
+![](RMarkdown_figs/markdown-taxi_trip%204-1.png)<!-- -->
+
+only long distance trips in the morning. Hence longer time in the
+afternoon should be due to traffic.

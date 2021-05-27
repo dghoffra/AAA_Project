@@ -15,16 +15,60 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+```{r taxi_trip, include=FALSE}
+
+# load libraries
+library(arrow)
+library(zoo)
+library(lubridate)
+library(tidyverse)
+
+# load data
+
+df <- read_parquet(
+  "C:/Users/Felix/Documents/AAA/Data/df_sample_22_05_2021.parquet",
+  col_select = NULL,
+  as_data_frame = TRUE,
+  props = ParquetArrowReaderProperties$create()
+)
+
+head(df)
+
 ```
 
-## Including Plots
+```{r taxi_trip 2}
+# create 
 
-You can also embed plots, for example:
+df <- df %>% mutate(Tripmonth = as.factor(month((parse_date_time(df$`Trip Start Timestamp`, "mdYHMS%p")))),
+                    Triphour = hour(parse_date_time(df$`Trip Start Timestamp`, "mdYHMS%p"))
+    
+)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+# Trips per dayhour for each month
+ggplot(df,aes(Triphour, fill = Tripmonth))+
+  geom_bar()+
+  facet_wrap( ~ Tripmonth)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r taxi_trip 3}
+# mean trip length per dayhour
+df %>% group_by(Triphour) %>% summarize(mean_trip_length_in_seconds = mean(`Trip Seconds`, na.rm = TRUE)) %>%
+  ungroup() %>% 
+  ggplot(data = ., aes(y= mean_trip_length_in_seconds, x = Triphour))+
+  geom_col()
+
+```
+
+longer trips during commuting time. longer trips or more traffic?
+
+```{r taxi_trip 4}
+df %>% group_by(Triphour) %>% summarize(mean_trip_length_in_miles = mean(`Trip Miles`, na.rm = TRUE)) %>%
+  ungroup() %>% 
+  ggplot(data = ., aes(y= mean_trip_length_in_miles, x = Triphour))+
+  geom_col() 
+```
+
+only long distance trips in the morning. Hence longer time in the afternoon should be due to traffic.
+
+
+
