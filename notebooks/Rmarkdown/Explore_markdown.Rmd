@@ -2,9 +2,7 @@
 title: "Explore_markdown"
 author: "Felix"
 date: "27 5 2021"
-output:  
-  keep_md: true
-  html_document:
+output: rmarkdown::github_document
 ---
 
 ```{r setup, include=FALSE}
