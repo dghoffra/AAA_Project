@@ -1,0 +1,180 @@
+---
+title: "Explore_markdown"
+author: "Felix"
+date: "27 5 2021"
+output: rmarkdown::github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.path = "RMarkdown_figs/markdown-", echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r taxi_trip, include=FALSE}
+
+# load libraries
+library(arrow)
+library(zoo)
+library(lubridate)
+library(tidyverse)
+library(tmap)
+library(sp)
+library(sf)
+
+# load data
+
+df <- read_parquet(
+  "C:/Users/Felix/Documents/AAA/Data/df_cleaned_18_06_2021.parquet",
+  col_select = NULL,
+  as_data_frame = TRUE,
+  props = ParquetArrowReaderProperties$create()
+)
+df <- df[sample(nrow(df), 100000), ] #sample random rows for quick data manipulation
+
+head(df)
+
+```
+
+```{r taxi_trip 2}
+# create 
+
+df <- df %>% mutate(Tripmonth = month(`Trip Start Timestamp`),
+                    Tripdate = date(`Trip Start Timestamp`),
+                    Triphour = hour(`Trip Start Timestamp`)
+    )
+
+# Code from old, not cleaned file on Drive
+# df <- df %>% mutate(Tripmonth = as.factor(month((parse_date_time(df$`Trip Start Timestamp`, "mdYHMS%p")))),
+#                     Triphour = hour(parse_date_time(df$`Trip Start Timestamp`, "mdYHMS%p"))
+#     
+# )
+
+# Trips per dayhour for each month
+ggplot(df,aes(Triphour, fill = Tripmonth))+
+  geom_bar()+
+  facet_wrap( ~ Tripmonth)
+```
+
+```{r taxi_trip 3}
+# mean trip length per dayhour
+df %>% group_by(Triphour) %>% summarize(mean_trip_length_in_seconds = mean(`Trip Seconds`, na.rm = TRUE)) %>%
+  ungroup() %>% 
+  ggplot(data = ., aes(y= mean_trip_length_in_seconds, x = Triphour))+
+  geom_col()
+
+```
+
+longer trips during commuting time (mornings and afternoons). longer trips or more traffic?
+
+```{r taxi_trip 4}
+df %>% group_by(Triphour) %>% summarize(mean_trip_length_in_miles = mean(`Trip Miles`, na.rm = TRUE)) %>%
+  ungroup() %>% 
+  ggplot(data = ., aes(y= mean_trip_length_in_miles, x = Triphour))+
+  geom_col() 
+```
+
+only long distance trips in the morning. Hence longer time in the afternoon should be due to high traffic.
+
+
+Where does the traffic appear in the morning?
+
+```{r taxi_trip 5}
+Pickup <- df %>% filter(!is.na(`Pickup Centroid Latitude`)) %>% select(`Trip ID`, `Pickup Centroid Latitude`, `Pickup Centroid Longitude`, Triphour, Tripmonth) %>% rename(Lat = `Pickup Centroid Latitude`,
+                      Long = `Pickup Centroid Longitude`,
+                      ) %>% mutate(Status = "Pickup")
+
+Dropoff <- df %>% filter(!is.na(`Pickup Centroid Latitude`)) %>% select(`Trip ID`, `Dropoff Centroid Latitude`, `Dropoff Centroid Longitude`, Triphour, Tripmonth) %>% rename(Lat = `Dropoff Centroid Latitude`,
+                      Long = `Dropoff Centroid Longitude`,
+                      ) %>% mutate(Status = "Dropoff")
+
+Pickup <- Pickup %>% filter(Triphour > 4 & Triphour < 9 & Tripmonth == "2") # restricting to morning commuting in Februrary
+Dropoff <- Dropoff %>% filter(Triphour > 4 & Triphour < 9 & Tripmonth == "2") # restricting to morning commuting in Februrary
+# 
+# sampleInd = sample(x = c(FALSE,TRUE), size = nrow(Pickup), prob = c(.3, .7), replace = TRUE) # randomly draw 30 % of the sample
+# Pickup = Pickup[!sampleInd,]
+# Dropoff = Dropoff[!sampleInd,]
+
+Triplocation <- bind_rows(Pickup, Dropoff)
+Triplocation <- Triplocation[!is.na(Triplocation$Lat),]
+
+coordinates(Triplocation) <- ~Long+Lat
+
+#Pickup<-st_as_sf(Pickup)
+
+
+tmap_mode("plot")
+tm_shape(Triplocation) +
+ tm_dots(col = "Status")
+
+
+```
+Dropoff and Pick up during morning hours in February
+
+couldn t plot in view mode for .md file. Only works with html. This only looks lame...
+
+
+Create Prediction data Set
+
+Daily periods:
+```{r taxi_trip 6}
+unique(df$PU_H3)
+
+# some rides dont have a H3 ID
+df <- df[complete.cases(df$PU_H3), ]
+df <- df[complete.cases(df$DO_H3), ]
+# delete those rides with NA 
+
+# Make tolls NA equla 0
+df$Tolls[is.na(df$Tolls)] <- 0
+
+# get prediction data set
+df_pred <- df %>% group_by(Tripdate, PU_H3) %>% summarize(number_of_taxirides = n(),
+                                                          number_of_taxis = length(unique(`Taxi ID`)),
+                                                          number_of_companies = length(unique(Company)),
+                                                          avg_trip_seconds = mean(`Trip Seconds`,na.rm = TRUE),
+                                                          avg_trip_miles = mean(`Trip Miles`,na.rm = TRUE),
+                                                          avg_trip_fare = mean(Fare,na.rm = TRUE),
+                                                          avg_tips = mean(Tips),
+                                                          avg_tolls = mean(Tolls),
+                                                          avg_extras = mean(Extras),
+                                                          tip_rate = sum(as.integer(Tips>0))/n(),
+                                                          toll_rate = sum(as.integer(Tolls>0))/n(),
+                                                          extras_rate = sum(as.integer(Extras>0))/n(),
+                                                          cash_rate = sum(as.integer(`Payment Type`== "Cash"))/n(), # one could also seperate different payment types, however most of the payment is done with either cash or credit card.
+                                                          total_trip_seconds = sum(`Trip Seconds`,na.rm = TRUE),
+                                                          total_trip_miles = sum(`Trip Miles`,na.rm = TRUE),
+                                                          dropoff_rate_within_same_H3 = sum(as.integer(PU_H3 == DO_H3, na.rm= TRUE))/n()
+                                                          ) %>% ungroup()
+
+# Now these numbers of observations, averages and sums stem from the observations of a prediction unit. It would be cheap to use them as features. 
+# create averages on a weekday bases 
+df_pred <- df_pred %>% mutate(weekday = wday(Tripdate, label = TRUE, abbr = FALSE)) 
+
+df_pred_grouped_averages <- df_pred %>% group_by(weekday, PU_H3) %>% summarise(avg_number_of_taxirides = mean(number_of_taxirides),
+                                                          avg_number_of_taxis = mean(number_of_taxis),
+                                                          avg_number_of_companies = mean(number_of_companies),
+                                                          avg_trip_seconds = mean(avg_trip_seconds),
+                                                          avg_trip_miles = mean(avg_trip_miles),
+                                                          avg_trip_fare = mean(avg_trip_fare),
+                                                          avg_tips = mean(avg_tips),
+                                                          avg_tolls = mean(avg_tolls),
+                                                          avg_extras = mean(avg_extras),
+                                                          avg_tip_rate = mean(tip_rate),
+                                                          avg_toll_rate = mean(toll_rate),
+                                                          avg_extras_rate = mean(extras_rate),
+                                                          avg_cash_rate = mean(cash_rate),
+                                                          avg_total_trip_seconds = mean(total_trip_seconds),
+                                                          avg_total_trip_miles = mean(total_trip_miles),
+                                                          avg_dropoff_rate_within_same_H3 = mean(dropoff_rate_within_same_H3)
+                                                          ) %>% ungroup()
+
+df_pred <- left_join(df_pred %>% select(number_of_taxirides, Tripdate, PU_H3, weekday), df_pred_grouped_averages)
+
+print(head(df_pred))
+
+```
