@@ -1,2 +1,6 @@
 /data
 .Rproj.user
+
+
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
