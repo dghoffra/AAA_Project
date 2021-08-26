@@ -1,0 +1,183 @@
+{
+    "version": "v1",
+    "config": {
+      "visState": {
+        "filters": [
+          {
+            "dataId": [
+              "3533z469"
+            ],
+            "id": "5rwdt6lwq",
+            "name": [
+              "count"
+            ],
+            "type": "range",
+            "value": [
+              10,
+              695
+            ],
+            "enlarged": false,
+            "plotType": "histogram",
+            "animationWindow": "free",
+            "yAxis": null,
+            "speed": 1
+          }
+        ],
+        "layers": [
+          {
+            "id": "3d09i9",
+            "type": "arc",
+            "config": {
+              "dataId": "3533z469",
+              "label": "new layer",
+              "color": [
+                18,
+                92,
+                119
+              ],
+              "highlightColor": [
+                252,
+                242,
+                26,
+                255
+              ],
+              "columns": {
+                "lat0": "PU_y",
+                "lng0": "PU_x",
+                "lat1": "DO_y",
+                "lng1": "DO_x"
+              },
+              "isVisible": true,
+              "visConfig": {
+                "opacity": 0.63,
+                "thickness": 0.7,
+                "colorRange": {
+                  "name": "UberPool 6",
+                  "type": "diverging",
+                  "category": "Uber",
+                  "colors": [
+                    "#213E9A",
+                    "#551EAD",
+                    "#C019BD",
+                    "#D31256",
+                    "#E6470A",
+                    "#F9E200"
+                  ]
+                },
+                "sizeRange": [
+                  0,
+                  164.7
+                ],
+                "targetColor": null
+              },
+              "hidden": false,
+              "textLabel": [
+                {
+                  "field": null,
+                  "color": [
+                    255,
+                    255,
+                    255
+                  ],
+                  "size": 18,
+                  "offset": [
+                    0,
+                    0
+                  ],
+                  "anchor": "start",
+                  "alignment": "center"
+                }
+              ]
+            },
+            "visualChannels": {
+              "colorField": {
+                "name": "count",
+                "type": "integer"
+              },
+              "colorScale": "quantile",
+              "sizeField": {
+                "name": "count",
+                "type": "integer"
+              },
+              "sizeScale": "linear"
+            }
+          }
+        ],
+        "interactionConfig": {
+          "tooltip": {
+            "fieldsToShow": {
+              "3533z469": [
+                {
+                  "name": "PU_H3_acc",
+                  "format": null
+                },
+                {
+                  "name": "DO_H3_acc",
+                  "format": null
+                },
+                {
+                  "name": "count",
+                  "format": null
+                },
+                {
+                  "name": "PU_x",
+                  "format": null
+                },
+                {
+                  "name": "PU_y",
+                  "format": null
+                }
+              ]
+            },
+            "compareMode": false,
+            "compareType": "absolute",
+            "enabled": true
+          },
+          "brush": {
+            "size": 0.5,
+            "enabled": false
+          },
+          "geocoder": {
+            "enabled": false
+          },
+          "coordinate": {
+            "enabled": false
+          }
+        },
+        "layerBlending": "normal",
+        "splitMaps": [],
+        "animationConfig": {
+          "currentTime": null,
+          "speed": 1
+        }
+      },
+      "mapState": {
+        "bearing": 18.9609375,
+        "dragRotate": true,
+        "latitude": 41.90176764125496,
+        "longitude": -87.80635744619846,
+        "pitch": 55.78034682080925,
+        "zoom": 10.646803967205793,
+        "isSplit": false
+      },
+      "mapStyle": {
+        "styleType": "light",
+        "topLayerGroups": {},
+        "visibleLayerGroups": {
+          "label": true,
+          "road": true,
+          "border": false,
+          "building": true,
+          "water": true,
+          "land": true,
+          "3d building": false
+        },
+        "threeDBuildingColor": [
+          218.82023004728686,
+          223.47597962276103,
+          223.47597962276103
+        ],
+        "mapStyles": {}
+      }
+    }
+  }
