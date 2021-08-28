@@ -1,6 +1,6 @@
 Welcome 👋
 
-✨ Background
+💡 Background
 
 A renowned German car company is in the process of establishing a platform for ridehailing mobility services. 
 With this project, we contribute new insights to the manufacturers lack of operational know-how.
