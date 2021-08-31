@@ -37,4 +37,5 @@ Check the contributing guide.
 Breyer, Roman - Ghoffrani, Davis - Mindl, Felix - Neumüller, Nikita - Zimmermann, Leon
 
 Github: @romanbreyer, @dghoffra, @Freelix123 , @INikson, @Leon Zimmermann
+
 Show your support
